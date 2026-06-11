@@ -1,0 +1,7 @@
+Requirements
+
+Python 3.9+
+PostgreSQL database access
+Excel reference files:
+    Supervisors.xlsx
+    Справочник.xlsx
