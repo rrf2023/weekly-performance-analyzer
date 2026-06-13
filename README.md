@@ -1,81 +1,109 @@
 Weekly Performance Analyzer
 
-Automated ETL and anomaly detection pipeline for retail household transaction analysis.
+Overview
 
-This project ingests PostgreSQL transactional data, applies rule-based behavioral analysis, and generates structured weekly Excel reports for supervisors. It detects potentially anomalous household purchasing patterns using transparent, explainable business rules rather than black-box models.
+Weekly Performance Analyzer is a production-style ETL and behavioral analytics system designed to process retail transaction data and identify anomalous household purchasing patterns using transparent, rule-based logic.
 
-Built as a portfolio-grade data engineering and analytics project, it demonstrates practical ETL workflows, business-rule systems, relational data processing, and automated reporting in Python.
+Unlike typical machine learning–driven anomaly detection systems, this project prioritizes interpretability and auditability, making it suitable for operational retail analytics environments where explainability is critical.
 
-Key Features
-ETL Pipeline
+The system ingests PostgreSQL transaction data, enriches it using reference datasets, applies structured transformation logic, and generates automated weekly Excel reports for supervisors and analytics teams.
+
+Why This Project Matters
+
+In real-world retail and operational analytics, stakeholders often require:
+
+Fully explainable anomaly detection logic (no black-box models)
+Reproducible weekly reporting pipelines
+Clear traceability from raw data → business insight
+Lightweight, maintainable ETL systems
+
+This project demonstrates how these requirements can be implemented using a modular Python-based data pipeline.
+
+System Architecture
+PostgreSQL → ETL Layer → Data Enrichment → Rule Engine → Reporting Layer (Excel)
+Core Components
+1. ETL Pipeline
 Extracts transactional data from PostgreSQL
 Normalizes household IDs, SKU/EAN codes, and product categories
-Applies weekly time-window filtering
-Reporting Engine
-Generates per-supervisor Excel reports
-Produces consolidated anomaly report
-Cross-references household activity across datasets
-Business Rule Engine (Anomaly Detection)
+Applies weekly time-window filtering for reporting cycles
+2. Data Enrichment Layer
+Joins transaction data with reference datasets:
+Supervisor → household mapping
+Product category dictionary
+SKU/EAN reference metadata
+Ensures consistent categorization across all outputs
+3. Rule-Based Anomaly Detection Engine
 
-A household is flagged if:
+Households are flagged based on interpretable behavioral heuristics:
 
-It has only 1–2 product categories (low diversity signal), OR
-It shares identical SKU signature with other households
-Excel Output Features
-Structured worksheets with formatted columns
-Hierarchical grouping (expand/collapse rows)
-Cross-report navigation via internal links
-Aggregated summaries per household and category
+Low category diversity
+Households with only 1–2 product categories within a weekly window
+SKU signature similarity
+Households sharing identical or highly similar SKU purchase patterns
+
+These rules are designed to surface:
+
+Unusual purchasing behavior
+Potentially coordinated or duplicated activity patterns
+Outliers in consumption structure
+4. Reporting Engine
+Generates per-supervisor weekly Excel reports
+Produces consolidated anomaly reports
+Includes structured summaries and hierarchical grouping
+Supports cross-referencing between households and categories
+Outputs
+Supervisor Reports
+
+Generated per supervisor:
+
+sup_{id}_{week_start}.xlsx
+
+Includes:
+
+Household-level purchase summaries
+Category breakdowns
+Product-level aggregation
+Anomaly Report
+Suspicious_households_{week_start}.xlsx
+
+Includes:
+
+Flagged households
+Detected anomaly indicators
+SKU signature clustering results
+Data Model
+Table: sample_transactions
+Column	Description
+f0103	Household ID
+f0122	SKU / EAN code
+prod_group	Product category code
+date	Transaction timestamp
 Tech Stack
 Python 3.9+
 PostgreSQL
 psycopg2
 pandas
 openpyxl
-Tkinter (optional desktop UI layer)
+Tkinter (optional UI layer)
 Project Structure
 app/
-  main.py                 # ETL pipeline orchestrator
-  Supervisors.xlsx       # Supervisor-to-household mapping
-  Справочник.xlsx        # Category reference dictionary
-  EAN.xlsx               # SKU/EAN reference data
-  setup.example.txt      # Configuration template
+├── main.py              # Pipeline orchestrator
+├── db.py                # PostgreSQL connection layer
+├── processors.py       # Transformation + rule engine
+├── excel_export.py     # Reporting engine
+├── reference_loader.py # Reference dataset loader
+├── config.py           # Configuration management
+├── gui.py              # Optional desktop UI
 
 docs/
-  schema.sql             # PostgreSQL schema definition
+└── schema.sql          # Database schema
 
-output/
-  sample_reports/        # Example generated Excel reports (not required to run)
+examples/
+├── example_1.png
+└── example_2.png
 
 requirements.txt
 README.md
-Data Model
-PostgreSQL Table: sample_transactions
-Column	Description
-f0103	Household ID
-f0122	SKU / EAN code
-prod_group	Product category code
-date	Transaction timestamp
-Outputs
-1. Supervisor Reports
-
-Generated per supervisor:
-
-sup_{id}_{week_start}.xlsx
-
-Contains:
-
-Household-level purchase summaries
-Category breakdown
-Referenced product descriptions
-2. Suspicious Households Report
-Suspicious_households_{week_start}.xlsx
-
-Contains:
-
-Flagged households
-Anomaly indicators
-SKU signature clustering results
 Setup & Installation
 1. Clone repository
 git clone https://github.com/rrf2023/weekly-performance-analyzer.git
@@ -86,12 +114,9 @@ source venv/bin/activate
 3. Install dependencies
 pip install -r requirements.txt
 4. Configure database
-
-Copy configuration template:
-
 cp app/setup.example.txt app/setup.txt
 
-Edit with your PostgreSQL credentials:
+Edit configuration:
 
 host=localhost
 port=5432
@@ -99,51 +124,42 @@ database=your_db
 user=your_user
 password=your_password
 5. Initialize database
-
-Run schema setup:
-
 psql -U your_user -d your_db -f docs/schema.sql
 6. Run pipeline
 python app/main.py
 Example Workflow
 Load transactional data from PostgreSQL
-Join with reference dictionaries (Supervisors + categories + SKU metadata)
-Apply weekly filtering
+Enrich data using reference dictionaries
+Apply weekly filtering logic
 Generate supervisor-level reports
-Detect anomalies using rule engine
+Execute anomaly detection rules
 Export structured Excel outputs
 Design Philosophy
 
-This project intentionally avoids heavy frameworks to demonstrate:
+This project is intentionally built with minimal dependencies to emphasize:
 
 Transparent ETL logic
 Explicit business rule implementation
-Reproducible reporting pipeline
-Minimal dependency surface
+Reproducible reporting pipelines
+Maintainable modular structure
 
-The goal is clarity over abstraction.
+The focus is on clarity, auditability, and practical data engineering design, rather than abstraction-heavy frameworks.
 
 Limitations
-Single-process execution (no async pipeline)
+Designed for batch weekly processing (not real-time streaming)
+Single-process execution model
 Local configuration-based setup
-Designed for batch weekly runs, not streaming
-Excel output is file-based (not BI tool integration)
+Excel-based output instead of BI dashboard integration
+
+These constraints reflect a focus on simplicity and interpretability.
+
 Future Improvements
-Modular architecture refactor (ETL / rules / reporting separation)
-Async PostgreSQL queries for scalability
-Config-driven rule engine
-Web dashboard (Streamlit / FastAPI)
-Secure credential storage (.env integration)
-Incremental processing (delta loads instead of full refresh)
+Modular ETL pipeline refactor with stricter separation of concerns
+Async PostgreSQL query execution for performance scaling
+Config-driven rule engine (external rule definitions)
+Web-based dashboard (Streamlit or FastAPI)
+Secure credential management via environment variables
+Incremental data processing (delta loads instead of full refresh)
 License
 
 MIT
-
-Notes
-
-This project is intended as a portfolio-grade demonstration of:
-
-ETL pipeline design
-Data transformation logic
-Business rule-based anomaly detection
-Automated reporting systems
